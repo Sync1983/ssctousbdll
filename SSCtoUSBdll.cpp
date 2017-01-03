@@ -114,6 +114,8 @@ int	initUsb(LPDEVICE_INFO device) {
 	if (WinUsb_QueryInterfaceSettings(device->iHandle, 0, &device->ifaceDescriptor) == 0) {
 		return -1;
 	}
+	
+	WinUsb_GetAssociatedInterface(device->iHandle, 0, &device->assocIFace);
 
 	WORD epCount = device->ifaceDescriptor.bNumEndpoints;
 	device->pipeInfo = new WINUSB_PIPE_INFORMATION[epCount];
@@ -133,7 +135,7 @@ int	initUsb(LPDEVICE_INFO device) {
 }
 
 int getStatus(LPDEVICE_INFO device, LPDEVICE_STATUS status) {
-	ULONG readLen;
+	ULONG readLen;	
 
 	if (WinUsb_ReadPipe(device->iHandle, 
 						device->pipeInfo[EP_GET_STATUS].PipeId, 
@@ -180,5 +182,34 @@ int sendPoint(LPDEVICE_INFO device, LPDEVICE_POINT point) {
 	else if (writeLen != sizeof(DEVICE_POINT)) {
 		return 0;
 	}
+	return 1;
+}
+
+int sendCommand(LPDEVICE_INFO device, UINT8 cmd, UINT16 wIndex, UINT16 wValue, void *Buf, UINT8 bufSize) {
+	ULONG writeLen, sendLen = sizeof(WINUSB_SETUP_PACKET);
+	WINUSB_SETUP_PACKET setup;
+	
+	if (Buf != NULL) {
+		sendLen += bufSize;
+	}
+
+	setup.RequestType	= 0x80;
+	setup.Request		= cmd;
+	setup.Index			= wIndex;
+	setup.Value			= wValue;
+	setup.Length		= sendLen;	
+
+	if (WinUsb_ControlTransfer(	device->iHandle,
+								setup,
+								(PUCHAR)Buf,
+								bufSize,
+								&writeLen,
+								NULL) == 0) {
+		return 0;
+	}
+	else if ( writeLen != sendLen ) {
+		return 0;
+	}
+
 	return 1;
 }

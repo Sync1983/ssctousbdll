@@ -27,6 +27,7 @@ typedef struct {
 	WINUSB_INTERFACE_HANDLE		iHandle;
 	USB_INTERFACE_DESCRIPTOR	ifaceDescriptor;
 	WINUSB_PIPE_INFORMATION	   *pipeInfo;
+	WINUSB_INTERFACE_HANDLE		assocIFace;
 } DEVICE_INFO;
 
 typedef struct {
@@ -43,6 +44,18 @@ typedef struct {
 	DWORD	position;
 } DEVICE_STATUS, *LPDEVICE_STATUS;
 
+typedef struct  {
+	UINT8 bmRequestType;   /**< Type of the request. */
+	UINT8 bRequest;        /**< Request command code. */
+	UINT8 wValueL;          /**< wValue parameter of the request. */
+	UINT8 wValueH;          /**< wValue parameter of the request. */
+	UINT8 wIndexL;          /**< wIndex parameter of the request. */
+	UINT8 wIndexH;          /**< wIndex parameter of the request. */
+	UINT8 wLengthL;         /**< Length of the data to transfer in bytes. */
+	UINT8 wLengthH;         /**< Length of the data to transfer in bytes. */
+	UINT8 extend[8];
+} USB_Request_Header, *LPUSB_Request_Header;
+
 #pragma pack()
 
 typedef DEVICE_INFO *LPDEVICE_INFO;
@@ -54,4 +67,5 @@ extern "C" int DLLSPEC initUsb(LPDEVICE_INFO device);
 extern "C" int DLLSPEC getStatus(LPDEVICE_INFO device, LPDEVICE_STATUS status);
 extern "C" int DLLSPEC setStatus(LPDEVICE_INFO device, LPDEVICE_STATUS status);
 extern "C" int DLLSPEC sendPoint(LPDEVICE_INFO device, LPDEVICE_POINT status);
+extern "C" int DLLSPEC sendCommand(LPDEVICE_INFO device, UINT8 cmd, UINT16 wIndex, UINT16 wValue, void *Buf, UINT8 bufSize);
 extern "C" int DLLSPEC freeUSB(LPDEVICE_INFO device);
